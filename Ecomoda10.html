@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>EcoModa - Doações</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+h1 {
+    font-family: 'Playfair Display', serif;
+    color: #ff8fb6;
+    text-align:center;
+}
+
+h2 {
+    font-family: 'Playfair Display', serif;
+    color: #d6b68a;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f7f3ec;
+    margin: 0;
+    padding: 20px;
+}
+
+.botao {
+    background-color: #f2e2c4;
+    padding: 12px 20px;
+    margin: 10px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.formulario, .tabela, .interesse {
+    background-color: white;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 10px;
+    display: none;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table, th, td {
+    border: 1px solid #aaa;
+    padding: 8px;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 8px;
+    margin-top: 4px;
+}
+
+/* imagem miniatura */
+.foto-preview {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+/* Modal de imagem ampliada */
+#imagemModal {
+    position: fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    display:none;
+    justify-content:center;
+    align-items:center;
+    background:rgba(0,0,0,0.8);
+    z-index:99999;
+}
+#imagemModal img {
+    width: 420px;
+    max-width: 90%;
+    border-radius: 12px;
+}
+
+/* Confete */
+.confete {
+    position: fixed;
+    top: -10px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    animation: cair 2s linear forwards;
+    z-index: 99999;
+}
+
+@keyframes cair {
+    100% { transform: translateY(100vh); opacity: 0; }
+}
+
+/* ✅ MODAL DO JOGO */
+#gameModal {
+    position: fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background: rgba(0,0,0,0.6);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index: 9999;
+}
+
+.modalBox {
+    background:white;
+    padding:30px;
+    border-radius:12px;
+    width:380px;
+    text-align:center;
+    font-size:22px;
+}
+
+</style>
+</head>
+<body>
+
+<h1>EcoModa <span style="font-size:22px; color:#d6b68a;">- Doações</span></h1>
+
+<button class="botao" onclick="abrirFormulario()">Doar Roupas</button>
+<button class="botao" onclick="abrirTabela()">Verificar Doações</button>
+
+<!-- ✅ JOGAR VOLTOU PARA O LUGAR CERTO -->
+<div style="text-align:center; margin-top:25px;">
+<button class="botao" onclick="abrirJogo()" style="background-color:#ffb5c8;">Jogar</button>
+</div>
+<!-- FORMULÁRIO DE DOAÇÃO -->
+<div id="formularioDoacao" class="formulario">
+<h2>Formulário de Doação</h2>
+
+<label>Nome do doador: <input id="nome"></label>
+<label>Telefone: <input id="telefone"></label>
+<label>Email: <input id="email"></label>
+<label>O que deseja doar: <input id="item"></label>
+
+<label>Tamanho da roupa:
+<select id="tamanho">
+<option>PP</option>
+<option>P</option>
+<option>M</option>
+<option>G</option>
+<option>GG</option>
+</select>
+</label>
+
+<label>Foto da roupa:
+<input type="file" id="foto" accept="image/*">
+</label>
+
+<button class="botao" onclick="adicionarDoacao()">Salvar Doação</button>
+</div>
+
+<!-- TABELA -->
+<div id="tabelaDoacoes" class="tabela">
+<h2>Roupas Doadas</h2>
+
+<table>
+<thead>
+<tr>
+<th>Foto</th>
+<th>Item</th>
+<th>Status</th>
+<th>Interesse</th>
+</tr>
+</thead>
+<tbody id="listaDoacoes"></tbody>
+</table>
+
+<!-- ✅ FORMULÁRIO INTERESSADO -->
+<div id="interesseItem" class="interesse" style="display:block;">
+<h2>Solicitar Item</h2>
+<label>Seu nome: <input id="intNome"></label>
+<label>Telefone: <input id="intTel"></label>
+<label>Endereço: <input id="intEnd"></label>
+<label>Email: <input id="intEmail"></label>
+<label>Item desejado: <input id="intItem"></label>
+
+<!-- botão que abre o WhatsApp do doador (adição solicitada) -->
+<button class="botao" id="solicitarZapBtn" onclick="solicitarViaWhatsApp()">Solicitar via WhatsApp</button>
+
+<!-- aviso em cinza com email do doador (aparece somente depois de solicitar) -->
+<p id="emailAviso" style="display:none; color:gray; font-size:14px;">
+    Se você quiser, para confirmar, você pode mandar mensagem pelo email do doador:<br>
+    <span id="emailDoadorExibido"></span>
+</p>
+
+<!-- confirmar só funciona após abrir o WhatsApp -->
+<button class="botao" id="confirmarBtn" style="display:inline-block; margin-top:10px;" onclick="confirmarInteresse()">Confirmar</button>
+</div>
+
+</div>
+
+<!-- MODAL IMAGEM AMPLIADA -->
+<div id="imagemModal" onclick="this.style.display='none'">
+    <img id="imagemGrande" alt="Imagem ampliada">
+</div>
+
+<!-- ÁREA DO JOGO -->
+<div id="areaJogo" style="display:none; text-align:center; margin-top:20px;">
+<h2>Recicle e Vista!</h2>
+<canvas id="gameCanvas" width="500" height="350" style="background:#ffeae0; border-radius:10px;"></canvas>
+</div>
+
+<!-- ✅ MODAL DO JOGO -->
+<div id="gameModal">
+<div class="modalBox">
+<p id="modalMsg"></p>
+<button id="btn1" class="botao"></button>
+<button id="btn2" class="botao"></button>
+</div>
+</div>
+<script>
+/*──────── SISTEMA DE DOAÇÃO ────────*/
+let doacoes = [];
+let selecionadoIndex = null; // índice do doador selecionado na tabela
+
+function abrirFormulario() {
+    document.getElementById("tabelaDoacoes").style.display = "none";
+    document.getElementById("areaJogo").style.display = "none";
+    document.getElementById("interesseItem").style.display = "none";
+    document.getElementById("formularioDoacao").style.display = "block";
+}
+
+function abrirTabela() {
+    atualizarTabela();
+    document.getElementById("formularioDoacao").style.display = "none";
+    document.getElementById("areaJogo").style.display = "none";
+    document.getElementById("interesseItem").style.display = "block";
+    document.getElementById("tabelaDoacoes").style.display = "block";
+}
+
+/* SALVAR DOAÇÃO - agora também salva nome/telefone/email do doador (mantendo IDs originais) */
+function adicionarDoacao() {
+    const nomeDoador = document.getElementById("nome").value.trim();
+    const telefoneDoador = document.getElementById("telefone").value.trim();
+    const emailDoador = document.getElementById("email").value.trim();
+    const item = document.getElementById("item").value.trim();
+    const tamanho = document.getElementById("tamanho").value;
+    const fotoInput = document.getElementById("foto");
+
+    if (!item) return alert("Preencha o item!");
+
+    let fotoURL = "";
+    if (fotoInput.files.length > 0) {
+        fotoURL = URL.createObjectURL(fotoInput.files[0]);
+    }
+
+    doacoes.push({
+        item: item,
+        tamanho: tamanho,
+        status: "Disponível",
+        foto: fotoURL,
+        donorName: nomeDoador || "",
+        donorPhone: telefoneDoador || "",
+        donorEmail: emailDoador || ""
+    });
+
+    atualizarTabela();
+    document.getElementById("formularioDoacao").style.display = "none";
+    abrirTabela();
+}
+
+/* ATUALIZAR TABELA - mantive visual igual, adicionei botão solicitar que abre o formulário do interessado */
+function atualizarTabela() {
+    const tabela = document.getElementById("listaDoacoes");
+    tabela.innerHTML = "";
+
+    doacoes.forEach((d, i) => {
+        tabela.innerHTML += `
+        <tr>
+            <td><img src="${d.foto}" class="foto-preview" onclick="ampliarImagem('${d.foto}')"></td>
+            <td>${d.item} (${d.tamanho})</td>
+            <td style="color:${d.status === "Disponível" ? "green" : "red"}; font-weight:bold;">${d.status}</td>
+            <td>
+                ${d.status === "Disponível" ? `<button onclick="abrirInteresse(${i})" style="background:#ffb5c8; padding:6px 12px; border:none; border-radius:8px;">Solicitar</button>` : "Indisponível"}
+            </td>
+        </tr>`; 
+    });
+}
+
+/* abrir interesse: preenche o formulário do interessado e guarda qual doador foi escolhido */
+function abrirInteresse(i) {
+    selecionadoIndex = i;
+    const d = doacoes[i];
+    document.getElementById("interesseItem").style.display = "block";
+    document.getElementById("formularioDoacao").style.display = "none";
+    document.getElementById("tabelaDoacoes").style.display = "block";
+    document.getElementById("intItem").value = d.item;
+    document.getElementById("emailDoadorExibido").textContent = d.donorEmail || "não informado";
+    // inicialmente esconder aviso e confirmar até que o interessado solicite via WhatsApp
+    document.getElementById("emailAviso").style.display = "none";
+    document.getElementById("confirmarBtn").style.display = "inline-block";
+}
+
+/* abrir WhatsApp do doador (opção C de mensagem personalizada) */
+function solicitarViaWhatsApp() {
+    if (selecionadoIndex === null) return alert("Escolha um item na tabela primeiro.");
+    const d = doacoes[selecionadoIndex];
+    const nomeInteressado = document.getElementById("intNome").value.trim();
+    const telefoneInteressado = document.getElementById("intTel").value.trim();
+    const item = document.getElementById("intItem").value.trim();
+
+    if (!nomeInteressado || !telefoneInteressado || !item) {
+        return alert("Preencha seu nome, telefone e o item desejado antes de solicitar.");
+    }
+
+    // se doador não passou telefone, avisa e mostra o email
+    const numeroDoador = (d.donorPhone || "").replace(/\D/g, "");
+    if (!numeroDoador) {
+        document.getElementById("emailDoadorExibido").textContent = d.donorEmail || "não informado";
+        document.getElementById("emailAviso").style.display = "block";
+        return alert("O doador não cadastrou telefone. Você pode contatar pelo e-mail exibido.");
+    }
+
+    const mensagem = encodeURIComponent(`Olá! Meu nome é ${nomeInteressado} e tenho interesse no item '${item}' que você está doando.`);
+
+    // marcar em localStorage que abriu o chat (para confirmar depois)
+    try {
+        const key = `chat_opened_${numeroDoador}_${item.toLowerCase()}`;
+        localStorage.setItem(key, '1');
+    } catch(e) { console.warn("localStorage falhou", e); }
+
+    // mostrar o e-mail do doador em cinza para confirmar também por e-mail
+    document.getElementById("emailDoadorExibido").textContent = d.donorEmail || "não informado";
+    document.getElementById("emailAviso").style.display = "block";
+
+    // abrir WhatsApp em nova aba com +55 (Brasil)
+    const url = `https://wa.me/55${numeroDoador}?text=${mensagem}`;
+    window.open(url, "_blank");
+}
+
+/* confirmar só funciona se o interessado já abriu o WhatsApp */
+function confirmarInteresse() {
+    if (selecionadoIndex === null) return alert("Escolha um item antes de confirmar.");
+    const d = doacoes[selecionadoIndex];
+    const item = document.getElementById("intItem").value.trim();
+    const numeroDoador = (d.donorPhone || "").replace(/\D/g, "");
+    const key = `chat_opened_${numeroDoador}_${item.toLowerCase()}`;
+    const abriu = (localStorage.getItem(key) === '1');
+
+    if (!abriu) {
+        return alert("Você precisa primeiro clicar em 'Solicitar via WhatsApp' e iniciar a conversa com o doador antes de confirmar.");
+    }
+
+    // marcar indisponível
+    d.status = "Indisponível";
+    atualizarTabela();
+    alert("Pedido registrado! 💖");
+}
+
+/* IMAGEM GRANDE */
+function ampliarImagem(url) {
+    if (!url) return;
+    document.getElementById("imagemGrande").src = url;
+    document.getElementById("imagemModal").style.display = "flex";
+}
+/*──────── JOGO ────────*/
+let ctx, player, lixos, inimigos, level, darkness;
+let confettiInterval = null;
+
+function abrirJogo() {
+    document.getElementById("areaJogo").style.display = "block";
+    iniciarJogo();
+}
+
+function iniciarJogo() {
+    const canvas = document.getElementById("gameCanvas");
+    ctx = canvas.getContext("2d");
+    level = 1;
+    iniciarFase();
+}
+
+function iniciarFase() {
+    const cores = ["#ff4444", "#ffdd55", "#44ddff", "#66ff66", "#ff77dd"];
+
+    player = { x: 250, y: 300, size: 18, cor: "#ff5999" };
+
+    lixos = Array.from({ length: 7 }, () => ({
+        x: Math.random() * 470,
+        y: Math.random() * 300,
+        cor: cores[Math.floor(Math.random() * cores.length)]
+    }));
+
+    if (level === 1) {
+        inimigos = Array.from({ length: 3 }, () => ({
+            x: Math.random()*470,
+            y: Math.random()*300,
+            size: 15,
+            vel: 0
+        }));
+        darkness = false;
+    }
+
+    if (level === 2) {
+        inimigos = [{ x:Math.random()*470, y:Math.random()*300, size:15, vel:0.18 }];
+        darkness = false;
+    }
+
+    if (level === 3) {
+        inimigos = [{ x:Math.random()*470, y:Math.random()*300, size:15, vel:0.28 }]; // um pouco mais lento que antes
+        darkness = true;
+    }
+    loop();
+}
+
+/* ✅ Mantive WASD */
+document.addEventListener("keydown", e => {
+    if (!player) return;
+    if (e.key === "a" || e.key === "A") player.x -= 12;
+    if (e.key === "d" || e.key === "D") player.x += 12;
+    if (e.key === "w" || e.key === "W") player.y -= 12;
+    if (e.key === "s" || e.key === "S") player.y += 12;
+
+    player.x = Math.max(player.size, Math.min(500 - player.size, player.x));
+    player.y = Math.max(player.size, Math.min(350 - player.size, player.y));
+});
+
+function loop() {
+    if (!ctx) return;
+    ctx.clearRect(0, 0, 500, 350);
+
+    ctx.fillStyle = "#ffeae0";
+    ctx.fillRect(0, 0, 500, 350);
+
+    ctx.fillStyle = player.cor;
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, player.size, 0, Math.PI*2);
+    ctx.fill();
+
+    lixos.forEach(l => {
+        ctx.fillStyle = l.cor;
+        ctx.fillRect(l.x, l.y, 20, 20);
+    });
+
+    lixos = lixos.filter(l => {
+        if (Math.hypot(player.x-(l.x+10), player.y-(l.y+10)) < 25) {
+            player.cor = l.cor;
+            return false;
+        }
+        return true;
+    });
+
+    ctx.fillStyle = "#cc0000";
+    inimigos.forEach(e => {
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.size, 0, Math.PI*2);
+        ctx.fill();
+
+        if (e.vel > 0) {
+            let dx = player.x - e.x;
+            let dy = player.y - e.y;
+            let dist = Math.hypot(dx, dy);
+            if (dist > 0) {
+                e.x += (dx/dist) * e.vel;
+                e.y += (dy/dist) * e.vel;
+            }
+        }
+
+        if (Math.hypot(player.x-e.x, player.y-e.y) < player.size+e.size) {
+            mostrarModal(
+                "💀 Ihh! Você foi pego! Tentar de novo?",
+                "Sair", "Recomeçar",
+                sairGame, () => { fecharModal(); iniciarJogo(); }
+            );
+        }
+    });
+
+    /* ✅ NOVA LUZ AMARELA — sem rosa, sem branco */
+    if (darkness) {
+        ctx.fillStyle = "rgba(0,0,0,0.94)";
+        ctx.fillRect(0, 0, 500, 350);
+
+        let luz = ctx.createRadialGradient(player.x, player.y, 6, player.x, player.y, 145);
+        luz.addColorStop(0, "rgba(240,190,20,0.95)");
+        luz.addColorStop(0.3, "rgba(230,170,10,0.55)");
+        luz.addColorStop(1, "rgba(0,0,0,0)");
+
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.fillStyle = luz;
+        ctx.beginPath();
+        ctx.arc(player.x, player.y, 150, 0, Math.PI*2);
+        ctx.fill();
+        ctx.globalCompositeOperation = "source-over";
+    }
+
+    if (lixos.length === 0) proximaFase();
+
+    requestAnimationFrame(loop);
+}
+
+function proximaFase() {
+    if (level === 1) {
+        mostrarModal(
+            "🎉 Parabénss! Isso foi incrível! Quer ir para o próximo nível?",
+            "Sair", "Continuar",
+            sairGame, () => { fecharModal(); level = 2; iniciarFase(); }
+        );
+    }
+    else if (level === 2) {
+        mostrarModal(
+            "🔥 OLOKOO! Você é demais! Quer se arriscar mais ainda?",
+            "Sair", "Continuar",
+            sairGame, () => { fecharModal(); level = 3; iniciarFase(); }
+        );
+    }
+    else {
+        iniciarConfete(); // confete começa imediatamente quando a mensagem aparece
+        mostrarModal(
+            "🏆 NOSSAA, parabéns!! Você zerou o jogo!",
+            "Sair", "Recomeçar",
+            sairGame, () => { fecharModal(); iniciarJogo(); }
+        );
+    }
+}
+
+/* ✅ MODAL */
+function mostrarModal(msg, btn1, btn2, func1, func2) {
+    document.getElementById("modalMsg").innerText = msg;
+    document.getElementById("btn1").innerText = btn1;
+    document.getElementById("btn2").innerText = btn2;
+
+    document.getElementById("btn1").onclick = () => {
+        fecharModal();
+        func1();
+    };
+    document.getElementById("btn2").onclick = () => {
+        fecharModal();
+        func2();
+    };
+
+    document.getElementById("gameModal").style.display = "flex";
+}
+
+function fecharModal() {
+    document.getElementById("gameModal").style.display = "none";
+}
+
+function sairGame() {
+    pararConfete();
+    fecharModal();
+    document.getElementById("areaJogo").style.display = "none";
+    window.scrollTo(0,0);
+}
+
+/* CONFETE FINAL */
+function iniciarConfete() {
+    pararConfete();
+    confettiInterval = setInterval(confete, 180);
+}
+
+function pararConfete() {
+    clearInterval(confettiInterval);
+}
+
+function confete() {
+    const c = document.createElement("div");
+    c.classList.add("confete");
+    c.style.left = Math.random() * 100 + "vw";
+    c.style.background = `hsl(${Math.random()*360}, 100%, 60%)`;
+    c.style.animationDuration = Math.random() + 1 + "s";
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 2000);
+}
+</script>
+
+</body>
+</html>
